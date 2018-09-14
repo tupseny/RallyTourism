@@ -2,13 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org/">
 <head>
     <meta charset="UTF-8">
+
+    <!--Debugging-->
+    <meta http-equiv="cache-control" content="max-age=0">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="-1">
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 11:00:00 GMT">
+    <meta http-equiv="pragma" content="no-cache">
+
     <title>Start page</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="js/tools.js"></script>
     <script type="application/javascript" src="js/main.js"></script>
+    <script type="application/javascript" src="js/filter.js"></script>
 </head>
 <body>
-<p th:text="'This is start page'"></p>
 
 <!--Debugging button. Stress test-->
 <input type="number" id="stress-num">

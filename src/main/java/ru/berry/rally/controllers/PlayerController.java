@@ -50,7 +50,7 @@ public class PlayerController {
 
     @PostMapping("remove-all")
     public void removeAll(){
-        log.info("DELETE ALL4");
+        log.info("DELETE ALL");
         playerRepository.deleteAll();
     }
 }

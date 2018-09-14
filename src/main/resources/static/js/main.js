@@ -10,6 +10,15 @@ $(document).ready(function () {
     });
 
     updateTable();
+
+//    Debugging
+    JSONArray = sessionStorage.getItem("players");
+    console.log(getJSONKeys(JSONArray));
+});
+
+//On... events
+$('#filterField').change(function () {
+
 });
 
 //Functions
@@ -32,34 +41,80 @@ function updateTable() {
             dataType: "json"
         })
             .done(function (data) {
+                savePlayersIntoSession(JSON.stringify(data));
                 refreshTable(data);
             });
     });
 }
 
+function getJSONKeys(JSONarray) {
+    const data = JSON.parse(JSONarray);
+    let keys = [];
+
+    for(let key in data[0]){
+        if (keys.indexOf(key) === -1) {
+            keys.push(key);
+        }
+    }
+
+    return keys;
+}
+
 function refreshTable (data) {
-    let id = "table-get-all-players";
+    const gen = new HtmlGenerator();
+    const tableId = "table-get-all-players";
+    const titleRowId = "id='title-row'";
 
-    let temp = "<table id='"+id+"'><tr id='table-all-tr'><td>ID</td> <td>NAME</td> <td>SURNAME</td></tr>";
-    data.forEach(function (e) {
-        temp += "<tr><td id='entity-id'>";
-        temp += e.id;
-        temp += "</td><td>";
-        temp += e.name;
-        temp += "</td><td>";
-        temp += e.surname;
-        temp += "</td><td>";
-        temp += "<button type='button' onclick='removeRow(this)'>X</button></td></tr>"
+    const removeBut = gen.button_start("removeRow(this)") + "X" + gen.BUTTON_END;
+    const keys = getJSONKeys(JSON.stringify(data));
+
+    //Table
+    let newTable = gen.table_start("id='"+tableId+"'");
+
+    //Title row
+    let titleRow = gen.row_start("id='"+titleRowId+"'");
+    keys.forEach(function (key) {
+        key = key.trim();
+        titleRow += gen.col_start("id='title-" + key.toLowerCase() + "'");
+        titleRow += key.toUpperCase();
+        titleRow += gen.COL_END;
     });
-    temp += "</table>";
+    titleRow += gen.ROW_END;
 
-    $('#'+id).replaceWith(temp);
+    let dataRows = "";
+    //foreach element of JSON data
+    data.forEach(function (e) {
+        //start row
+        dataRows += gen.row_start();
+
+        //foreach element by key
+        keys.forEach(function (key) {
+            dataRows += gen.col_start("id='entity-"+key+"'");
+            dataRows += e[key];
+            dataRows += gen.COL_END;
+        });
+
+        //add remove button
+        dataRows += gen.col_start();
+        dataRows += removeBut;
+        dataRows += gen.COL_END;
+
+        //end row
+        dataRows += gen.ROW_END;
+    });
+
+    newTable += titleRow;
+    newTable += dataRows;
+    newTable += gen.TABLE_END;
+
+    $('#'+tableId).replaceWith(newTable);
 
     console.log("Table is updated");
 }
 
 function removeRow(elem) {
     let id = $(elem).parent().parent().find('#entity-id').text();
+    console.log("Sent request for deleting (ID: " + id + ")");
 
     $.ajax({
         url: "player/remove",
@@ -84,3 +139,71 @@ function stressTest(count){
         console.log("After Ajax: " + string);
     }
 }
+
+function savePlayersIntoSession(JSONArray) {
+    console.log("Loaded players to cache");
+    sessionStorage.setItem("players", JSONArray);
+}
+
+//classes
+class HtmlGenerator{
+    constructor() {
+        this._HTML_START = "<";
+        this._HTML_END = ">";
+        this._HTML_TAG_END = "/";
+        this._HTML_TABLE = "table";
+        this._HTML_ROW = "tr";
+        this._HTML_COL = "td";
+        this._HTML_BUTTON = "button";
+
+        this._TABLE_END = this._HTML_START + this._HTML_TAG_END + this._HTML_TABLE + this._HTML_END;
+        this._ROW_END = this._HTML_START + this._HTML_TAG_END + this._HTML_ROW + this._HTML_END;
+        this._COL_END = this._HTML_START + this._HTML_TAG_END + this._HTML_COL + this._HTML_END;
+        this._BUTTON_END = this._HTML_START + this._HTML_TAG_END + this._HTML_BUTTON + this._HTML_END;
+    }
+
+    get TABLE_END() {
+        return this._TABLE_END;
+    }
+
+    get ROW_END() {
+        return this._ROW_END;
+    }
+
+    get COL_END() {
+        return this._COL_END;
+    }
+
+    get BUTTON_END() {
+        return this._BUTTON_END;
+    }
+
+    table_start(properties){
+        if (properties == null) {
+            properties = "";
+        }
+        return this._HTML_START + this._HTML_TABLE + " " + properties + this._HTML_END;
+    }
+
+    row_start(properties) {
+        if (properties == null) {
+            properties = "";
+        }
+        return this._HTML_START + this._HTML_ROW + " " + properties + this._HTML_END;
+    }
+
+    col_start(properties){
+        if (properties == null) {
+            properties = "";
+        }
+        return this._HTML_START + this._HTML_COL + " " + properties + this._HTML_END;
+    }
+
+    button_start(properties, onclick){
+        if (onclick == null) {
+            onclick = properties;
+            properties = "";
+        }
+        return this._HTML_START + this._HTML_BUTTON + " " + properties + " type='button' onclick='" + onclick + "'" + this._HTML_END;
+    }
+  }
