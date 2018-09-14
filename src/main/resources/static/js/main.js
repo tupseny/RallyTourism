@@ -18,7 +18,7 @@ $(document).ready(function () {
 
 //On... events
 $('#filterField').change(function () {
-
+//TODO: filter table when input field is edited
 });
 
 //Functions
@@ -72,6 +72,7 @@ function refreshTable (data) {
     let newTable = gen.table_start("id='"+tableId+"'");
 
     //Title row
+    //TODO: Generate filter input fields above each column
     let titleRow = gen.row_start("id='"+titleRowId+"'");
     keys.forEach(function (key) {
         key = key.trim();
