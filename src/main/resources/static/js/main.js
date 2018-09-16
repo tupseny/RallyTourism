@@ -1,7 +1,8 @@
-//Prevent launching function faster than once in 500ms
+//Prevent launching function faster than once in 'n' ms
 let debounced_update = debounce(updateTable, 1000, true);
 
 //On page load
+//Listeners
 $(document).ready(function () {
     $('#input-new-form').submit(function (e) {
         e.preventDefault();
@@ -12,6 +13,7 @@ $(document).ready(function () {
     updateTable();
 
     //Listeners
+
     //Debugging
     $('#filter-test').on({
         'keyup': event => {
@@ -64,7 +66,11 @@ function getJSONKeys(JSONarray) {
     return keys;
 }
 
-function genNewTable(titles, id) {
+function genNewTable(data, titles, id) {
+    if (data == null) {
+        console.warn("No data for update! Table is not generated");
+        return;
+    }
     if (id == null) {
         id="";
     }
@@ -75,16 +81,24 @@ function genNewTable(titles, id) {
 
     const gen = new HtmlGenerator();
     const titleRowId = "id='title-row'";
+    const filtersRowId = "id='filters-row'";
     const removeBut = gen.button_start("removeRow(this)") + "X" + gen.BUTTON_END;
 
     //Table
     let newTable = gen.table_start("id='"+id+"'");
 
     //Row of filters
-    //TODO: Generate filter input fields above each column
+    let filtersRow = gen.row_start(filtersRowId);
+    titles.forEach(key => {
+        key.trim().toLowerCase();
+        filtersRow += gen.col_start();
+        filtersRow += gen.text_field("id='filter-" + key + "'");
+        filtersRow += gen.COL_END;
+    });
+    filtersRow += gen.ROW_END;
 
     //Title row
-    let titleRow = gen.row_start("id='"+titleRowId+"'");
+    let titleRow = gen.row_start(titleRowId);
     titles.forEach(function (key) {
         key = key.trim();
         titleRow += gen.col_start("id='title-" + key.toLowerCase() + "'");
@@ -93,9 +107,8 @@ function genNewTable(titles, id) {
     });
     titleRow += gen.ROW_END;
 
-    //data rows
+    //Data rows
     let dataRows = "";
-    //foreach element of JSON data
     data.forEach(function (e) {
         //start row
         dataRows += gen.row_start();
@@ -116,6 +129,7 @@ function genNewTable(titles, id) {
         dataRows += gen.ROW_END;
     });
 
+    newTable += filtersRow;
     newTable += titleRow;
     newTable += dataRows;
     newTable += gen.TABLE_END;
@@ -127,7 +141,7 @@ function refreshTable (data) {
     const tableId = "table-get-all-players";
     const titles = getJSONKeys(JSON.stringify(data));
 
-    const table = genNewTable(titles, tableId);
+    const table = genNewTable(data, titles, tableId);
 
     $('#'+tableId).replaceWith(table);
 }
