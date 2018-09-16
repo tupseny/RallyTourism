@@ -178,7 +178,7 @@ function applyFilterListeners() {
             $('#filter-' + key).keyup(function (event) {
                 console.log("Filter: " + key + "; Key: " + event.target.value);
                 loadFilterIntoSession(key, event.target.value);
-                // doFilterPlayersTable("filter-" + key, key);
+                doFilterPlayersTable("filter-" + key, key);
             });
         });
     })
@@ -224,6 +224,8 @@ function genFiltersTable(tableId) {
 }
 
 function applyFiltersTable() {
+
+    //todo: get filters froms session and enter them to fields
     const filterTableId = "table-players-filters";
 
     const table = genFiltersTable(filterTableId);

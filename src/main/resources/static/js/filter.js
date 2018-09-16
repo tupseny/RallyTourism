@@ -1,9 +1,11 @@
 function filterStartWith(filters, array) {
-    console.log("Filtering: " + filters);
+    filters = JSON.parse(filters);
     return array.filter(function (item) {
-        filters.forEach(function (key) {
-            return item[key] !== undefined || item[key].startsWith(filters[key]);
-        })
+        console.log(filters);
+        $.each(filters, function (key) {
+            console.log("key: '" + key + "' item: " + item[key] + " value: " + filters[key] + " result: " + item[key].toString().startsWith(filters[key]));
+            return item[key].toString().startsWith(filters[key]);
+        });
     });
 }
 
@@ -16,7 +18,6 @@ function doFilterPlayersTable(fieldId) {
         console.warn("Filters is empty (taken from session");
         return;
     }
-    filters = JSON.parse(filters);
 
     //get array of players from cache
     //todo: get array from table, not from session storage
@@ -29,6 +30,8 @@ function doFilterPlayersTable(fieldId) {
 
     array = filterStartWith(filters, array);
 
+    //todo: getting empty array. Fix!
+    console.log("Got array: " + array);
 
     refreshTable(array);
 }

@@ -13,7 +13,7 @@ import java.util.*;
 public class InitData {
 
 //    num of entries
-    private final int count = 100;
+    private final int count = 10;
 
     private final Logger log;
 
