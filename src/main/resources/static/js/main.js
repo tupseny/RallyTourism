@@ -12,15 +12,8 @@ $(document).ready(function () {
 
     updateTable();
 
+    applyFiltersTable();
     //Listeners
-
-    //Debugging
-    $('#filter-test').on({
-        'keyup': event => {
-            console.log("filter applied: " + event.target.value);
-            doFilterPlayersTable("filter-test");
-        }
-    });
 });
 
 //Functions
@@ -81,21 +74,10 @@ function genNewTable(data, titles, id) {
 
     const gen = new HtmlGenerator();
     const titleRowId = "id='title-row'";
-    const filtersRowId = "id='filters-row'";
     const removeBut = gen.button_start("removeRow(this)") + "X" + gen.BUTTON_END;
 
     //Table
     let newTable = gen.table_start("id='"+id+"'");
-
-    //Row of filters
-    let filtersRow = gen.row_start(filtersRowId);
-    titles.forEach(key => {
-        key.trim().toLowerCase();
-        filtersRow += gen.col_start();
-        filtersRow += gen.text_field("id='filter-" + key + "'");
-        filtersRow += gen.COL_END;
-    });
-    filtersRow += gen.ROW_END;
 
     //Title row
     let titleRow = gen.row_start(titleRowId);
@@ -129,7 +111,6 @@ function genNewTable(data, titles, id) {
         dataRows += gen.ROW_END;
     });
 
-    newTable += filtersRow;
     newTable += titleRow;
     newTable += dataRows;
     newTable += gen.TABLE_END;
@@ -142,6 +123,16 @@ function refreshTable (data) {
     const titles = getJSONKeys(JSON.stringify(data));
 
     const table = genNewTable(data, titles, tableId);
+
+    //check filters in session
+    let filters = sessionStorage.getItem("filters");
+    if (filters == null) {
+        let newFilters = {};
+        titles.forEach(e => {
+            newFilters[e] = "";
+        });
+        sessionStorage.setItem("filters", JSON.stringify(newFilters));
+    }
 
     $('#'+tableId).replaceWith(table);
 }
@@ -177,6 +168,69 @@ function stressTest(count){
 function savePlayersIntoSession(JSONArray) {
     console.log("Loaded players to cache");
     sessionStorage.setItem("players", JSONArray);
+}
+
+function applyFilterListeners() {
+    $(document).ready(function () {
+        const titles = getJSONKeys(sessionStorage.getItem("players"));
+        titles.forEach(key => {
+            console.log("filter-" + key);
+            $('#filter-' + key).keyup(function (event) {
+                console.log("Filter: " + key + "; Key: " + event.target.value);
+                loadFilterIntoSession(key, event.target.value);
+                // doFilterPlayersTable("filter-" + key, key);
+            });
+        });
+    })
+}
+
+function loadFilterIntoSession(key, value) {
+    let filters = sessionStorage.getItem("filters");
+    if (filters == null) {
+        console.warn("Filters is null. Can't load filter into session");
+        return;
+    }
+    filters = JSON.parse(filters);
+
+    if (filters[key] !== null)
+        console.log("update filters ("+key+"):{old: " + filters[key] + ", new: " + value);
+
+    filters[key] = value;
+    filters = JSON.stringify(filters);
+    sessionStorage.setItem("filters", filters);
+}
+
+function genFiltersTable(tableId) {
+    const filtersRowId = "id='filters-row'";
+    const gen = new HtmlGenerator();
+    let titles = sessionStorage.getItem("players");
+    titles = getJSONKeys(titles);
+
+    let table = gen.table_start("id='" + tableId + "'");
+
+    let filtersRow = gen.row_start(filtersRowId);
+    titles.forEach(key => {
+        key.trim().toLowerCase();
+        filtersRow += gen.col_start();
+        filtersRow += gen.text_field("id='filter-" + key + "'");
+        filtersRow += gen.COL_END;
+    });
+    filtersRow += gen.ROW_END;
+
+    table += filtersRow;
+    table += gen.TABLE_END;
+
+    return table;
+}
+
+function applyFiltersTable() {
+    const filterTableId = "table-players-filters";
+
+    const table = genFiltersTable(filterTableId);
+
+    $('#'+filterTableId).replaceWith(table);
+
+    applyFilterListeners();
 }
 
 //classes
