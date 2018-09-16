@@ -7,15 +7,18 @@ function filterStartWith(key, array) {
     });
 }
 
-function doFilterPlayers(fieldId, key, array) {
-    console.log("Filter{fieldId: " + fieldId + "; key: " + key + "; array: " + array + "}");
+function doFilterPlayersTable(fieldId) {
+    //get key from filter field. It's value
+    let key = $('#' + fieldId).val();
+    //get array of players from cache
+    let array = sessionStorage.getItem("players");
+    if (array == null) {
+        console.warn("Array is empty (taken from session");
+        return;
+    }
 
     array = JSON.parse(array);
-    array = filter(key, array);
+    array = filterStartWith(key, array);
 
     refreshTable(array);
-}
-
-function parsePlayersJSON(JSONArray) {
-    console.log(JSONArray);
 }

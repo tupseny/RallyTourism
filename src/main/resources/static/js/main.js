@@ -11,14 +11,14 @@ $(document).ready(function () {
 
     updateTable();
 
-//    Debugging
-    JSONArray = sessionStorage.getItem("players");
-    console.log(getJSONKeys(JSONArray));
-});
-
-//On... events
-$('#filterField').change(function () {
-//TODO: filter table when input field is edited
+    //Listeners
+    //Debugging
+    $('#filter-test').on({
+        'keyup': event => {
+            console.log("filter applied: " + event.target.value);
+            doFilterPlayersTable("filter-test");
+        }
+    });
 });
 
 //Functions
@@ -43,6 +43,10 @@ function updateTable() {
             .done(function (data) {
                 savePlayersIntoSession(JSON.stringify(data));
                 refreshTable(data);
+                console.log("Table is updated");
+            })
+            .fail(function (error) {
+                console.warn("Players request is failed: " + error);
             });
     });
 }
@@ -60,21 +64,28 @@ function getJSONKeys(JSONarray) {
     return keys;
 }
 
-function refreshTable (data) {
-    const gen = new HtmlGenerator();
-    const tableId = "table-get-all-players";
-    const titleRowId = "id='title-row'";
+function genNewTable(titles, id) {
+    if (id == null) {
+        id="";
+    }
+    if (titles == null) {
+        console.warn("Titles is null! Table is not generated");
+        return;
+    }
 
+    const gen = new HtmlGenerator();
+    const titleRowId = "id='title-row'";
     const removeBut = gen.button_start("removeRow(this)") + "X" + gen.BUTTON_END;
-    const keys = getJSONKeys(JSON.stringify(data));
 
     //Table
-    let newTable = gen.table_start("id='"+tableId+"'");
+    let newTable = gen.table_start("id='"+id+"'");
+
+    //Row of filters
+    //TODO: Generate filter input fields above each column
 
     //Title row
-    //TODO: Generate filter input fields above each column
     let titleRow = gen.row_start("id='"+titleRowId+"'");
-    keys.forEach(function (key) {
+    titles.forEach(function (key) {
         key = key.trim();
         titleRow += gen.col_start("id='title-" + key.toLowerCase() + "'");
         titleRow += key.toUpperCase();
@@ -82,6 +93,7 @@ function refreshTable (data) {
     });
     titleRow += gen.ROW_END;
 
+    //data rows
     let dataRows = "";
     //foreach element of JSON data
     data.forEach(function (e) {
@@ -89,7 +101,7 @@ function refreshTable (data) {
         dataRows += gen.row_start();
 
         //foreach element by key
-        keys.forEach(function (key) {
+        titles.forEach(function (key) {
             dataRows += gen.col_start("id='entity-"+key+"'");
             dataRows += e[key];
             dataRows += gen.COL_END;
@@ -108,9 +120,16 @@ function refreshTable (data) {
     newTable += dataRows;
     newTable += gen.TABLE_END;
 
-    $('#'+tableId).replaceWith(newTable);
+    return newTable;
+}
 
-    console.log("Table is updated");
+function refreshTable (data) {
+    const tableId = "table-get-all-players";
+    const titles = getJSONKeys(JSON.stringify(data));
+
+    const table = genNewTable(titles, tableId);
+
+    $('#'+tableId).replaceWith(table);
 }
 
 function removeRow(elem) {
@@ -156,6 +175,7 @@ class HtmlGenerator{
         this._HTML_ROW = "tr";
         this._HTML_COL = "td";
         this._HTML_BUTTON = "button";
+        this._HTML_INPUT = "input";
 
         this._TABLE_END = this._HTML_START + this._HTML_TAG_END + this._HTML_TABLE + this._HTML_END;
         this._ROW_END = this._HTML_START + this._HTML_TAG_END + this._HTML_ROW + this._HTML_END;
@@ -177,6 +197,13 @@ class HtmlGenerator{
 
     get BUTTON_END() {
         return this._BUTTON_END;
+    }
+
+    text_field(properties){
+        if (properties == null) {
+            properties = "";
+        }
+        return this._HTML_START + this._HTML_INPUT + ' type="text" ' + properties + this._HTML_END;
     }
 
     table_start(properties){
