@@ -1,7 +1,7 @@
 function filterStartWith(filters, array) {
     filters = JSON.parse(filters);
     return array.filter(function (item) {
-        console.log(filters);
+        console.log("filters: " + filters);
         $.each(filters, function (key) {
             console.log("key: '" + key + "' item: " + item[key] + " value: " + filters[key] + " result: " + item[key].toString().startsWith(filters[key]));
             return item[key].toString().startsWith(filters[key]);
@@ -20,7 +20,7 @@ function doFilterPlayersTable(fieldId) {
     }
 
     //get array of players from cache
-    //todo: get array from table, not from session storage
+
     let array = sessionStorage.getItem("players");
     if (array == null) {
         console.warn("Array is empty (taken from session");

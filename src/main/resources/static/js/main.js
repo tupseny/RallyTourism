@@ -1,6 +1,13 @@
 //Prevent launching function faster than once in 'n' ms
 let debounced_update = debounce(updateTable, 1000, true);
 
+//Global variables
+const sessionVar_filters = "filters";
+const sessionVar_players = "players";
+let player_keys = [];
+let players = [];
+let filters = [];
+
 //On page load
 //Listeners
 $(document).ready(function () {
@@ -11,12 +18,50 @@ $(document).ready(function () {
     });
 
     updateTable();
-
     applyFiltersTable();
+    initVars();
+    updateFilterFields();
+
     //Listeners
 });
 
 //Functions
+function initVars(){
+    console.log("<-- Init variables -->");
+    //players
+    console.log("+ players");
+    players = sessionStorage.getItem(sessionVar_players);
+    if (players == null){
+        console.log("Players are empty");
+        players = [];
+    } else {
+        players = JSON.parse(players);
+    }
+
+    //player keys
+    console.log("+ player keys");
+    player_keys = getJSONKeys(players);
+
+    //filters
+    console.log("+ filters");
+    filters = sessionStorage.getItem(sessionVar_filters);
+    if (filters == null) {
+        let newFilters = {};
+        player_keys.forEach(e => {
+            newFilters[e] = "";
+        });
+        sessionStorage.setItem(sessionVar_filters, JSON.stringify(newFilters));
+        filters = newFilters;
+    }else{
+        filters = JSON.parse(filters);
+    }
+    console.log("[-- Init vars --]");
+}
+
+function updateFilterFields(data) {
+
+}
+
 function fire_ajax_add() {
     let name = $('#new-insertion-name').val();
     let surname = $('#new-insertion-surname').val();
@@ -36,7 +81,7 @@ function updateTable() {
             dataType: "json"
         })
             .done(function (data) {
-                savePlayersIntoSession(JSON.stringify(data));
+                savePlayersIntoSession(data);
                 refreshTable(data);
                 console.log("Table is updated");
             })
@@ -46,11 +91,10 @@ function updateTable() {
     });
 }
 
-function getJSONKeys(JSONarray) {
-    const data = JSON.parse(JSONarray);
+function getJSONKeys(array) {
     let keys = [];
 
-    for(let key in data[0]){
+    for(let key in array[0]){
         if (keys.indexOf(key) === -1) {
             keys.push(key);
         }
@@ -59,7 +103,7 @@ function getJSONKeys(JSONarray) {
     return keys;
 }
 
-function genNewTable(data, titles, id) {
+function genNewTable(data, keys, id) {
     if (data == null) {
         console.warn("No data for update! Table is not generated");
         return;
@@ -67,8 +111,8 @@ function genNewTable(data, titles, id) {
     if (id == null) {
         id="";
     }
-    if (titles == null) {
-        console.warn("Titles is null! Table is not generated");
+    if (keys == null) {
+        console.warn("Player keys are null! Table is not generated");
         return;
     }
 
@@ -81,7 +125,7 @@ function genNewTable(data, titles, id) {
 
     //Title row
     let titleRow = gen.row_start(titleRowId);
-    titles.forEach(function (key) {
+    keys.forEach(function (key) {
         key = key.trim();
         titleRow += gen.col_start("id='title-" + key.toLowerCase() + "'");
         titleRow += key.toUpperCase();
@@ -96,7 +140,7 @@ function genNewTable(data, titles, id) {
         dataRows += gen.row_start();
 
         //foreach element by key
-        titles.forEach(function (key) {
+        keys.forEach(function (key) {
             dataRows += gen.col_start("id='entity-"+key+"'");
             dataRows += e[key];
             dataRows += gen.COL_END;
@@ -120,19 +164,7 @@ function genNewTable(data, titles, id) {
 
 function refreshTable (data) {
     const tableId = "table-get-all-players";
-    const titles = getJSONKeys(JSON.stringify(data));
-
-    const table = genNewTable(data, titles, tableId);
-
-    //check filters in session
-    let filters = sessionStorage.getItem("filters");
-    if (filters == null) {
-        let newFilters = {};
-        titles.forEach(e => {
-            newFilters[e] = "";
-        });
-        sessionStorage.setItem("filters", JSON.stringify(newFilters));
-    }
+    const table = genNewTable(data, player_keys, tableId);
 
     $('#'+tableId).replaceWith(table);
 }
@@ -165,15 +197,15 @@ function stressTest(count){
     }
 }
 
-function savePlayersIntoSession(JSONArray) {
-    console.log("Loaded players to cache");
-    sessionStorage.setItem("players", JSONArray);
+function savePlayersIntoSession(data) {
+    data = JSON.stringify(data);
+    sessionStorage.setItem(sessionVar_players, data);
 }
 
 function applyFilterListeners() {
     $(document).ready(function () {
-        const titles = getJSONKeys(sessionStorage.getItem("players"));
-        titles.forEach(key => {
+
+        player_keys.forEach(key => {
             console.log("filter-" + key);
             $('#filter-' + key).keyup(function (event) {
                 console.log("Filter: " + key + "; Key: " + event.target.value);
@@ -185,31 +217,19 @@ function applyFilterListeners() {
 }
 
 function loadFilterIntoSession(key, value) {
-    let filters = sessionStorage.getItem("filters");
-    if (filters == null) {
-        console.warn("Filters is null. Can't load filter into session");
-        return;
-    }
-    filters = JSON.parse(filters);
-
-    if (filters[key] !== null)
-        console.log("update filters ("+key+"):{old: " + filters[key] + ", new: " + value);
-
+    console.log("<-- Update filters -->\n("+key+"):{old: " + filters[key] + ", new: " + value + "}");
     filters[key] = value;
-    filters = JSON.stringify(filters);
-    sessionStorage.setItem("filters", filters);
+    sessionStorage.setItem(sessionVar_filters, JSON.stringify(filters));
 }
 
 function genFiltersTable(tableId) {
     const filtersRowId = "id='filters-row'";
     const gen = new HtmlGenerator();
-    let titles = sessionStorage.getItem("players");
-    titles = getJSONKeys(titles);
 
     let table = gen.table_start("id='" + tableId + "'");
 
     let filtersRow = gen.row_start(filtersRowId);
-    titles.forEach(key => {
+    player_keys.forEach(key => {
         key.trim().toLowerCase();
         filtersRow += gen.col_start();
         filtersRow += gen.text_field("id='filter-" + key + "'");
@@ -224,10 +244,8 @@ function genFiltersTable(tableId) {
 }
 
 function applyFiltersTable() {
-
     //todo: get filters froms session and enter them to fields
     const filterTableId = "table-players-filters";
-
     const table = genFiltersTable(filterTableId);
 
     $('#'+filterTableId).replaceWith(table);
