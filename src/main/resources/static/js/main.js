@@ -9,7 +9,6 @@ let players = [];
 let filters = [];
 
 //On page load
-//Listeners
 $(document).ready(function () {
     $('#input-new-form').submit(function (e) {
         e.preventDefault();
@@ -58,8 +57,10 @@ function initVars(){
     console.log("[-- Init vars --]");
 }
 
-function updateFilterFields(data) {
-
+function updateFilterFields() {
+    for (let key in filters){
+            $('#' + key).value = filters[key];
+    }
 }
 
 function fire_ajax_add() {
@@ -206,7 +207,7 @@ function applyFilterListeners() {
     $(document).ready(function () {
 
         player_keys.forEach(key => {
-            console.log("filter-" + key);
+            // console.log("filter-" + key);
             $('#filter-' + key).keyup(function (event) {
                 console.log("Filter: " + key + "; Key: " + event.target.value);
                 loadFilterIntoSession(key, event.target.value);
@@ -230,6 +231,7 @@ function genFiltersTable(tableId) {
 
     let filtersRow = gen.row_start(filtersRowId);
     player_keys.forEach(key => {
+
         key.trim().toLowerCase();
         filtersRow += gen.col_start();
         filtersRow += gen.text_field("id='filter-" + key + "'");
@@ -244,8 +246,8 @@ function genFiltersTable(tableId) {
 }
 
 function applyFiltersTable() {
-    //todo: get filters froms session and enter them to fields
     const filterTableId = "table-players-filters";
+    //todo: filters are not generated
     const table = genFiltersTable(filterTableId);
 
     $('#'+filterTableId).replaceWith(table);
