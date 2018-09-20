@@ -16,9 +16,9 @@ $(document).ready(function () {
         debounced_update()
     });
 
+    initVars();
     updateTable();
     applyFiltersTable();
-    initVars();
     updateFilterFields();
 
     //Listeners
@@ -26,9 +26,7 @@ $(document).ready(function () {
 
 //Functions
 function initVars(){
-    console.log("<-- Init variables -->");
     //players
-    console.log("+ players");
     players = sessionStorage.getItem(sessionVar_players);
     if (players == null){
         console.log("Players are empty");
@@ -38,11 +36,9 @@ function initVars(){
     }
 
     //player keys
-    console.log("+ player keys");
     player_keys = getJSONKeys(players);
 
     //filters
-    console.log("+ filters");
     filters = sessionStorage.getItem(sessionVar_filters);
     if (filters == null) {
         let newFilters = {};
@@ -54,7 +50,6 @@ function initVars(){
     }else{
         filters = JSON.parse(filters);
     }
-    console.log("[-- Init vars --]");
 }
 
 function updateFilterFields() {
@@ -207,9 +202,7 @@ function applyFilterListeners() {
     $(document).ready(function () {
 
         player_keys.forEach(key => {
-            // console.log("filter-" + key);
             $('#filter-' + key).keyup(function (event) {
-                console.log("Filter: " + key + "; Key: " + event.target.value);
                 loadFilterIntoSession(key, event.target.value);
                 doFilterPlayersTable("filter-" + key, key);
             });
@@ -218,7 +211,6 @@ function applyFilterListeners() {
 }
 
 function loadFilterIntoSession(key, value) {
-    console.log("<-- Update filters -->\n("+key+"):{old: " + filters[key] + ", new: " + value + "}");
     filters[key] = value;
     sessionStorage.setItem(sessionVar_filters, JSON.stringify(filters));
 }
@@ -231,7 +223,6 @@ function genFiltersTable(tableId) {
 
     let filtersRow = gen.row_start(filtersRowId);
     player_keys.forEach(key => {
-
         key.trim().toLowerCase();
         filtersRow += gen.col_start();
         filtersRow += gen.text_field("id='filter-" + key + "'");
@@ -247,7 +238,6 @@ function genFiltersTable(tableId) {
 
 function applyFiltersTable() {
     const filterTableId = "table-players-filters";
-    //todo: filters are not generated
     const table = genFiltersTable(filterTableId);
 
     $('#'+filterTableId).replaceWith(table);
